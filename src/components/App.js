@@ -12,6 +12,8 @@ import Empty from './Empty';
 
 import styles from './App.module.css';
 import 'react-toastify/dist/ReactToastify.css';
+import { contactsActions } from 'redux/actions/contacts.actions';
+import { useDispatch } from 'react-redux';
 
 const PHONE_BOOK_KEY = 'phonebook';
 const initializeContacts = () => storage.load(PHONE_BOOK_KEY) ?? [];
@@ -19,6 +21,8 @@ const initializeContacts = () => storage.load(PHONE_BOOK_KEY) ?? [];
 export const App = () => {
   const [ contacts, setContacts ] = useState(initializeContacts);
   const [ filter, setFilter ] = useState('');
+  const dispatch = useDispatch();
+  console.log(contactsActions.addNewContact);
 
   useEffect(() => {
     storage.save(PHONE_BOOK_KEY, contacts);
@@ -26,6 +30,7 @@ export const App = () => {
   }, [contacts]);
 
   const addContact = (newContact) => {
+    dispatch(contactsActions.addNewContact(newContact))
 
     if (!isContactUnique(newContact)) {
       toast.error(`${newContact.name} is already in contacts`);

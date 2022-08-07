@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import PropTypes from 'prop-types';
 import { Form, Wrapper, AddContact, Label, Input } from './ContactForm.styled';
-import { nanoid } from "nanoid";
 import { storage } from "services";
 
 const CONTACT_NAME_KEY = 'contact-name';
@@ -22,11 +21,12 @@ const ContactForm = ({ addContact }) => {
     useEffect(() => {
         storage.save(CONTACT_NAME_KEY, name);
         storage.save(CONTACT_NUMBER_KEY, number);
+
     }, [name, number]);
 
     const handleInputTypedValue = (e) => {
         const { name, value } = e.target;
-
+        
         contactMap[name](value);
     }
 
@@ -37,15 +37,13 @@ const ContactForm = ({ addContact }) => {
     const handleFormSubmit = (e) => {
         e.preventDefault();
 
-        const id = nanoid();
-        const wasAdded = addContact({ id, name, number });
-        
+        const wasAdded = addContact({ name, number });
         wasAdded && reset();
     }
 
     return (
         <Form
-            onSubmit={handleFormSubmit}
+            onSubmit={ handleFormSubmit }
         >
             <Wrapper>
                 <Label

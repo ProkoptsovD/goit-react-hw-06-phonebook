@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ThemeProvider } from 'styled-components';
 import { ToastContainer, toast } from 'react-toastify';
 import { theme } from 'theme';
@@ -12,43 +12,44 @@ import Empty from './Empty';
 
 import styles from './App.module.css';
 import 'react-toastify/dist/ReactToastify.css';
-import { contactsActions } from 'redux/actions/contacts.actions';
-import { useDispatch } from 'react-redux';
+import { contactsActions } from 'redux/contacts/contacts.actions';
+import { useDispatch, useSelector } from 'react-redux';
+import { contactsSelectors } from 'redux/contacts/contacts.selectors';
 
 const PHONE_BOOK_KEY = 'phonebook';
 const initializeContacts = () => storage.load(PHONE_BOOK_KEY) ?? [];
 
 export const App = () => {
-  const [ contacts, setContacts ] = useState(initializeContacts);
-  const [ filter, setFilter ] = useState('');
+  const isFirstRender = useRef(true);
   const dispatch = useDispatch();
-  console.log(contactsActions.addNewContact);
+  const contacts = useSelector(contactsSelectors.getAllContacts);
+  const filteredContacts = useSelector(contactsSelectors.getFilteredContacts);
+  const isEmpty = contacts.length === 0;
 
   useEffect(() => {
+    if(isFirstRender.current) {
+      dispatch(contactsActions.reHydrateContacts(initializeContacts()));
+      isFirstRender.current = false;
+    }
+
     storage.save(PHONE_BOOK_KEY, contacts);
 
-  }, [contacts]);
+  }, [contacts, dispatch]);
 
-  const addContact = (newContact) => {
-    dispatch(contactsActions.addNewContact(newContact))
+  const isContactUnique = (newContact) => !contacts.some(({ name }) => name.toLowerCase() === newContact.name.toLowerCase());
 
+  const addContact = (newContact) => {  
     if (!isContactUnique(newContact)) {
       toast.error(`${newContact.name} is already in contacts`);
-
       return false;
     }
 
-    setContacts(prevContacts => [ newContact, ...prevContacts ]);
+    dispatch(contactsActions.addContact(newContact));
     return true;
   }
-  const deleteContact = (contactId) => setContacts(prevContacts => prevContacts.filter(({ id }) => id !== contactId));
-
-  function isContactUnique (newContact) {
-      return !contacts.some(({ name }) => name.toLowerCase() === newContact.name.toLowerCase());
-  }
-
-    const isEmpty = contacts.length === 0;
-    const filteredContacts = contacts.filter(({ name }) => name.toLowerCase().includes(filter.toLowerCase()));
+  const deleteContact = (contactId) => {
+    dispatch(contactsActions.deleteContact(contactId))
+  };
 
     return (
       <ThemeProvider theme={theme}>
@@ -59,23 +60,20 @@ export const App = () => {
             Phonebook
           </h1>
           <ContactForm
-            addContact={addContact}
+            addContact={ addContact }
           />
           
           <h2
-            className={styles.title}
+            className={ styles.title }
           >
             Contacts
           </h2>
-          <Filter
-            onChange={(e) => setFilter(e.target.value)}
-            value={filter}
-          />
+          <Filter />
           {
             !isEmpty
               ? <ContactList
-                  deleteContact={deleteContact}
-                  contactList={ filter ? filteredContacts : contacts}
+                  deleteContact={ deleteContact }
+                  contactList={ filteredContacts.length ? filteredContacts : contacts }
                 />
               : <Empty message="Your phonebook is empty..."/>
           }

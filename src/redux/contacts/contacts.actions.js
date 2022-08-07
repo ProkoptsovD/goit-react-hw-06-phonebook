@@ -10,10 +10,8 @@ const addContact = createAction('[Contacts] Add new contact', (newContact) => {
     }
 });
 const deleteContact = createAction('[Contacts] Delete contact');
-const reHydrateContacts = createAction('[Contacts] Rehydrate contacts');
 
 export const contactsActions = {
     addContact,
     deleteContact,
-    reHydrateContacts
 }

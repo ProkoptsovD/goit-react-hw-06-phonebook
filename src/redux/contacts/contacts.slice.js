@@ -15,9 +15,6 @@ const contactsSlice = createSlice({
         [contactsActions.deleteContact](state, action) {
             state.items = state.items.filter(({ id }) => id !== action.payload);
         },
-        [contactsActions.reHydrateContacts](state, action) {
-            state.items = action.payload
-        }
     },
 })
 

@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import PropTypes from 'prop-types';
 import { Form, Wrapper, AddContact, Label, Input } from './ContactForm.styled';
 import { storage } from "services";
+import { useDispatch, useSelector } from "react-redux";
+import { contactsSelectors } from "redux/contacts/contacts.selectors";
+import { toast } from "react-toastify";
+import { contactsActions } from "redux/contacts/contacts.slice";
 
 const CONTACT_NAME_KEY = 'contact-name';
 const CONTACT_NUMBER_KEY = 'contact-number';
@@ -9,9 +12,14 @@ const CONTACT_NUMBER_KEY = 'contact-number';
 const initializeName = () => storage.load(CONTACT_NAME_KEY) ?? '';
 const initializeNumber = () => storage.load(CONTACT_NUMBER_KEY) ?? '';
 
-const ContactForm = ({ addContact }) => {
+const ContactForm = () => {
     const [ name, setName ] = useState(initializeName);
     const [ number, setNumber ] = useState(initializeNumber);
+
+    const dispatch = useDispatch();
+    const contacts = useSelector(contactsSelectors.getAllContacts);
+
+    const isContactUnique = (contactName) => !contacts.some(({ name }) => name.toLowerCase() === contactName.toLowerCase());
 
     const contactMap = {
         'name': (name) => setName(name),
@@ -26,7 +34,6 @@ const ContactForm = ({ addContact }) => {
 
     const handleInputTypedValue = (e) => {
         const { name, value } = e.target;
-        
         contactMap[name](value);
     }
 
@@ -37,8 +44,12 @@ const ContactForm = ({ addContact }) => {
     const handleFormSubmit = (e) => {
         e.preventDefault();
 
-        const wasAdded = addContact({ name, number });
-        wasAdded && reset();
+        if(!isContactUnique(name)) {
+            toast.error(`${name} has been already added`)
+        } else {
+            dispatch(contactsActions.addContact(name, number));
+            reset();
+        }
     }
 
     return (
@@ -82,10 +93,6 @@ const ContactForm = ({ addContact }) => {
             </AddContact>
         </Form>
     )
-}
-
-ContactForm.propTypes = {
-    addContact: PropTypes.func.isRequired,
 }
 
 export default ContactForm;
